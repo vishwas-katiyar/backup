@@ -4,6 +4,8 @@ import urllib.parse , json
 # from itsdangerous import json
 import pandas as pd
 # from  
+import os
+import datetime;
 from sqlalchemy import insert
 
 # stmt = (
@@ -251,6 +253,48 @@ def SignUp():
     except Exception as e:
         print(e)
         return {'msg':'user already '}
+
+
+@app.route("/chat/Login", methods=["POST"])
+# @login_required
+def chatLogin():
+    data = request.get_json()
+    print(data)
+  
+    roomNo=data['room']
+    file='rooms/{}.csv'.format(roomNo)
+    try:
+        df=pd.read_csv(file,index_col=[0])
+        # print(df)
+        temp={
+            'name': data['name'],
+            'timestamp':  datetime.datetime.now() ,
+            'msg': 'userConected',
+            'type': 'userConected',
+        }
+        df=df.append(temp,ignore_index = True)
+        # print(df)
+        df.to_csv(file)
+    except Exception as e :
+        print(e)
+    return response_util(data,200)
+
+@app.route("/chat/getData", methods=["GET"])
+# @login_required
+def getData():
+    data = request.get_json()
+    print(data)
+    roomNo=request.args.get('room')
+    # roomNo=data['room']
+    file='rooms/{}.csv'.format(roomNo)
+    try:
+        df=pd.read_csv(file,index_col=[0])
+        print(df.T.to_json())
+        return response_util(df.T.to_json(),200)
+    except Exception as e :
+        print(e)
+    return response_util(data,200)
+
 
 if __name__ == '__main__':
     app.run(port='5000',debug=True)
